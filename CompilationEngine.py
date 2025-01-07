@@ -20,8 +20,7 @@ class CompilationEngine:
         self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
         self.tokenizer.advance()
         self.output_file.write("<symbol> { </symbol>\n")
-        self.tokenizer.advance()
-
+        self.compileClassVarDec()
         self.output_file.write("<symbol } </symbol>\n")
         self.tokenizer.advance()
         self.output_file.write("<class>\n")
@@ -61,12 +60,34 @@ class CompilationEngine:
             self.output_file.write("<symbol> ( </symbol>\n")
             self.compileParameterList()
             self.output_file.write("<symbol> ) </symbol>\n")
-            self.tokenizer.advance()
-            self.
+            self.compileSubroutineBody()
+            self.output_file.write("</subroutineDec>\n")
 
     def compileParameterList(self):
         """Parses a parameter list."""
-        pass
+        self.tokenizer.advance()
+        self.output_file.write("<parameterList>\n")
+        while self.tokenizer.current_token.value != ")":
+            self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
+            self.tokenizer.advance()
+            self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
+            self.tokenizer.advance()
+            if self.tokenizer.current_token.value == ",":
+                self.output_file.write("<symbol> , </symbol>\n")
+                self.tokenizer.advance()
+
+    def compileSubroutineBody(self):
+        """Parses a complete subroutine body."""
+        self.tokenizer.advance()
+        self.output_file.write("<subroutineBody>\n")
+        self.output_file.write("<symbol> { </symbol>\n")
+        self.output_file.write("<statements>\n")
+        self.compileStatements()
+        self.compileReturn()
+        self.output_file.write("</statements>\n")
+        self.output_file.write("<symbol> } </symbol>\n")
+        self.tokenizer.advance()
+        self.output_file.write("</subroutineBody>\n")
 
     def compileVarDec(self):
         """Parses a variable declaration."""
@@ -74,18 +95,40 @@ class CompilationEngine:
 
     def compileStatements(self):
         """Parses a sequence of statements."""
-        pass
-
-    def compileDo(self):
-        """Parses a 'do' statement."""
-        pass
+        self.output_file.write("<returnStatements>\n")
+        self.tokenizer.advance()
+        self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
+        self.tokenizer.advance()
+        self.output_file.write("<expression>\n")
+        self.compileExpression()
+        self.output_file.write("</expression>\n")
+        self.output_file.write("<symbol> ; </symbol>\n")
+        self.tokenizer.advance()
+        self.output_file.write("</returnStatements>\n")
 
     def compileLet(self):
         """Parses a 'let' statement."""
-        pass
+        self.output_file.write("<keyword>" + self.tokenizer.current_token.value + "</keyword>\n")
+        self.tokenizer.advance()
+        self.output_file.write("<identifier>" + self.tokenizer.current_token.value + "</identifier>\n")
+        self.tokenizer.advance()
+        if self.tokenizer.tokenType() == "symbol" and self.tokenizer.current_token.value == "[":
+            self.output_file.write("<symbol>" + self.tokenizer.current_token.value + "</symbol>\n")
+            self.compileExpression()
+            if self.tokenizer.tokenType() == "symbol" and self.tokenizer.current_token.value == "]":
+                self.output_file.write("<symbol>" + self.tokenizer.current_token.value + "</symbol>\n")
+            self.tokenizer.advance()
+        self.output_file.write("<symbol>" + self.tokenizer.current_token.value + "</symbol>\n")
+        self.compileExpression()
+        self.output_file.write("<symbol>" + self.tokenizer.current_token.value + "</symbol>\n")
+        self.tokenizer.advance()
 
     def compileWhile(self):
         """Parses a 'while' statement."""
+
+
+    def compileDo(self):
+        """Parses a 'do' statement."""
         pass
 
     def compileReturn(self):
