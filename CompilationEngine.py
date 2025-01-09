@@ -21,39 +21,53 @@ class CompilationEngine:
         self.tokenizer.advance()
         self.output_file.write("<symbol> { </symbol>\n")
         self.compileClassVarDec()
+        self.compileSubroutine()
         self.output_file.write("<symbol } </symbol>\n")
-        self.tokenizer.advance()
         self.output_file.write("<class>\n")
         self.output_file.close()
 
     def compileClassVarDec(self):
         """Parses a static variable or field declaration."""
-        self.tokenizer.advance()
-        self.output_file.write("<classVarDec>\n")
-        match = ["static", "field",]
-        if self.tokenizer.current_token.value in match:
+        while self.tokenizer.hasMoreTokens():
+            self.tokenizer.advance()
+            if self.tokenizer.current_token.value not in ["static", "field"]:
+                self.tokenizer.decrementPointer()
+                break
+
+            self.output_file.write("<classVarDec>\n")
             self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
             self.tokenizer.advance()
-            self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
-            self.tokenizer.advance()
-            if self.tokenizer.current_token.value == ",":
-                self.output_file.write("<symbol> , </symbol>\n")
-                self.tokenizer.advance()
+            if self.tokenizer.tokenType() == "KEYWORD":
+                self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
+            else:
                 self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
-                self.tokenizer.advance()
-            self.output_file.write("<symbol> ; </symbol>\n")
+
+            while self.tokenizer.advance() and self.tokenizer.tokenType() == "IDENTIFIER":
+                self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
+                if self.tokenizer.advance() and self.tokenizer.current_token.value == ",":
+                    self.output_file.write("<symbol> , </symbol>\n")
+                else:
+                    self.tokenizer.decrementPointer()
+                    break
+
             self.tokenizer.advance()
+            self.output_file.write("<symbol> ; </symbol>\n")
             self.output_file.write("</classVarDec>\n")
 
     def compileSubroutine(self):
         """Parses a complete method, function, or constructor."""
-        match = ["constructor", "function", "method",]
-        self.tokenizer.advance()
-        self.output_file.write("<subroutineDec>\n")
-        if self.tokenizer.current_token.value in match:
-            self.output_file.write("<keyword> " + match + " </keyword>\n")
+        while self.tokenizer.hasMoreTokens():
             self.tokenizer.advance()
+            if self.tokenizer.current_token.value not in ["constructor", "function", "method"]:
+                self.tokenizer.decrementPointer()
+                break
+            self.output_file.write("<subroutineDec>\n")
             self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
+            self.tokenizer.advance()
+            if self.tokenizer.tokenType() == "KEYWORD":
+                self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
+            else:
+                self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
             self.tokenizer.advance()
             self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
             self.tokenizer.advance()
@@ -65,28 +79,28 @@ class CompilationEngine:
 
     def compileParameterList(self):
         """Parses a parameter list."""
-        self.tokenizer.advance()
         self.output_file.write("<parameterList>\n")
-        while self.tokenizer.current_token.value != ")":
-            self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
-            self.tokenizer.advance()
-            self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
-            self.tokenizer.advance()
-            if self.tokenizer.current_token.value == ",":
+        while self.tokenizer.advance() and self.tokenizer.current_token.value != ")":
+            if self.tokenizer.tokenType() == "KEYWORD":
+                self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
+            elif self.tokenizer.tokenType() == "IDENTIFIER":
+                self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
+            elif self.tokenizer.tokenType() == "SYMBOL" and self.tokenizer.current_token.value == ",":
                 self.output_file.write("<symbol> , </symbol>\n")
-                self.tokenizer.advance()
+        self.output_file.write("</parameterList>\n")
+
 
     def compileSubroutineBody(self):
         """Parses a complete subroutine body."""
-        self.tokenizer.advance()
         self.output_file.write("<subroutineBody>\n")
+        self.tokenizer.advance()
         self.output_file.write("<symbol> { </symbol>\n")
+        while self.tokenizer.advance() and self.tokenizer.current_token.value == "var":
+            self.compileVarDec()
         self.output_file.write("<statements>\n")
         self.compileStatements()
-        self.compileReturn()
         self.output_file.write("</statements>\n")
         self.output_file.write("<symbol> } </symbol>\n")
-        self.tokenizer.advance()
         self.output_file.write("</subroutineBody>\n")
 
     def compileVarDec(self):
@@ -95,24 +109,36 @@ class CompilationEngine:
         self.tokenizer.advance()
         self.output_file.write("<keyword> var </keyword>\n")
         self.tokenizer.advance()
-        if self.tokenizer.tokenType() == "identifier":
-            self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
-            self.tokenizer.advance()
-
-
+        self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
+        self.tokenizer.advance()
+        while self.tokenizer.current_token.value != ";":
+            if self.tokenizer.tokenType() is "IDENTIFIER":
+                self.output_file.write("<identifier> " + self.tokenizer.current_token.value + " </identifier>\n")
+                self.tokenizer.advance()
+            elif self.tokenizer.tokenType() is "SYMBOL":
+                self.output_file.write("<symbol> " + self.tokenizer.current_token.value + " </symbol>\n")
+                self.tokenizer.advance()
+        self.output_file.write("<symbol> ; </symbol>\n")
+        self.tokenizer.advance()
+        self.output_file.write("</varDec>\n")
 
     def compileStatements(self):
         """Parses a sequence of statements."""
-        self.output_file.write("<returnStatements>\n")
-        self.tokenizer.advance()
-        self.output_file.write("<keyword> " + self.tokenizer.current_token.value + " </keyword>\n")
-        self.tokenizer.advance()
-        self.output_file.write("<expression>\n")
-        self.compileExpression()
-        self.output_file.write("</expression>\n")
-        self.output_file.write("<symbol> ; </symbol>\n")
-        self.tokenizer.advance()
-        self.output_file.write("</returnStatements>\n")
+        while self.tokenizer.hasMoreTokens():
+            self.tokenizer.advance()
+            if self.tokenizer.current_token.value == "let":
+                self.compileLet()
+            elif self.tokenizer.current_token.value == "if":
+                self.compileIf()
+            elif self.tokenizer.current_token.value == "while":
+                self.compileWhile()
+            elif self.tokenizer.current_token.value == "do":
+                self.compileDo()
+            elif self.tokenizer.current_token.value == "return":
+                self.compileReturn()
+            else:
+                self.tokenizer.decrementPointer()
+                break
 
     def compileLet(self):
         """Parses a 'let' statement."""
