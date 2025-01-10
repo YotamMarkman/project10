@@ -1,136 +1,104 @@
-from enum import Enum
 import re
 
-# Enums for Keyword and Token Types
-class KeywordType(Enum):
-    CLASS = "class"
-    METHOD = "method"
-    FUNCTION = "function"
-    CONSTRUCTOR = "constructor"
-    INT = "int"
-    BOOLEAN = "boolean"
-    CHAR = "char"
-    VOID = "void"
-    VAR = "var"
-    STATIC = "static"
-    FIELD = "field"
-    LET = "let"
-    DO = "do"
-    IF = "if"
-    ELSE = "else"
-    WHILE = "while"
-    RETURN = "return"
-    TRUE = "true"
-    FALSE = "false"
-    NULL = "null"
-    THIS = "this"
+COMMENT_REGEX = r"(//.*)|(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)"
+EMPTY_PATTERN = re.compile(r"\s*")
+KEYWORD_MATCH = re.compile(r"^\s*("
+                            r"class|constructor|function|method|static|field"
+                            r"|var|int|char|boolean|void|true|false|null|this|"
+                            r"let|do|if|else|while|return)\s*")
+SYMBOL_MATCH = re.compile(r"^\s*([{}()\[\].,;+\-*/&|<>=~])\s*")
+NUMBER_MATCH = re.compile(r"^\s*(\d+)\s*")
+STRING_MATCH = re.compile(r"^\s*\"(.*)\"\s*")
+IDENTIFIER_MATCH = re.compile(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*")
 
-
-class TokenType(Enum):
-    KEYWORD = "KEYWORD"
-    SYMBOL = "SYMBOL"
-    IDENTIFIER = "IDENTIFIER"
-    INT_CONST = "INT_CONST"
-    STRING_CONST = "STRING_CONST"
-
+DEBUG_MODE = False
 
 class JackTokenizer:
-    KEYWORDS = {
-        "class", "constructor", "function", "method", "field", "static",
-        "var", "int", "char", "boolean", "void", "true", "false", "null",
-        "this", "let", "do", "if", "else", "while", "return"
-    }
-    SYMBOLS = "{}()[].,;+-*/&|<>=~"
-    OPERATIONS = "+-*/&|<>=~"
+    """
+    JackTokenizer module as described in NAND2Tetris chapter 10
+    """
 
-    def __init__(self, filename: str):
-        """Initializes the tokenizer with a file."""
-        with open(filename, 'r') as file:
-            self.lines = file.readlines()
+    keyword = ["CLASS", "METHOD", "FUNCTION", "CONSTRUCTOR", "INT",
+                "BOOLEAN", "CHAR", "VOID", "VAR", "STATIC", "FIELD", "LET",
+                "DO", "IF", "ELSE", "WHILE", "RETURN", "TRUE", "FALSE",
+                "NULL", "THIS"]
 
-        self.tokens = []
-        self.current_token = None
-        self.pointer = 0
-        self._tokenize()
+    KEYWORD = 0
+    SYMBOL = 1
+    INT_CONST = 2
+    STRING_CONST = 3
+    IDENTIFIER = 4
 
-    def _tokenize(self):
-        """Tokenizes the entire file content."""
-        code = ''.join(self.lines)
-        # Remove comments
-        code = re.sub(r'//.*|/\*.*?\*/', '', code, flags=re.DOTALL)
-        code = re.sub(r'\n', ' ', code)
+    def __init__(self, input_file_path):
+        """
+        :param input_file: the current file
+        """
+        with open(input_file_path, "r") as file:
+            self.text = file.read()
+        self._clear_all_comments()
+        self._tokenType = None
+        self._currentToken = None
 
-        # Tokenize using regex
-        token_pattern = r'("[^"\n]*")|([{}()[\].,;+\-*/&|<>=~])|(\d+)|([a-zA-Z_]\w*)'
-        matches = re.findall(token_pattern, code)
+    def _clear_all_comments(self):
+        """
+        Clear all comments from self.text .
+        """
+        self.text = re.sub(COMMENT_REGEX, "", self.text)
 
-        for match in matches:
-            string, symbol, integer, identifier = match
-            if string:
-                self.tokens.append(string)
-            elif symbol:
-                self.tokens.append(symbol)
-            elif integer:
-                self.tokens.append(integer)
-            elif identifier:
-                self.tokens.append(identifier)
-
-    def hasMoreTokens(self) -> bool:
-        """Checks if there are more tokens to process."""
-        return self.pointer < len(self.tokens)
+    def hasMoreTokens(self):
+        if re.fullmatch(EMPTY_PATTERN, self.text):
+            return False
+        else:
+            return True
 
     def advance(self):
-        """Moves to the next token."""
         if self.hasMoreTokens():
-            self.current_token = self.tokens[self.pointer]
-            self.pointer += 1
+            current_match = re.match(KEYWORD_MATCH, self.text)
+            if current_match is not None:
+                self.text = re.sub(KEYWORD_MATCH, "", self.text)
+                self._tokenType = JackTokenizer.KEYWORD
+                self._currentToken = current_match.group(1)
+            else:
+                current_match = re.match(SYMBOL_MATCH, self.text)
+                if current_match is not None:
+                    self.text = re.sub(SYMBOL_MATCH, "", self.text)
+                    self._tokenType = JackTokenizer.SYMBOL
+                    self._currentToken = current_match.group(1)
+                else:
+                    current_match = re.match(NUMBER_MATCH, self.text)
+                    if current_match is not None:
+                        self.text = re.sub(NUMBER_MATCH, "", self.text)
+                        self._tokenType = JackTokenizer.INT_CONST
+                        self._currentToken = current_match.group(1)
+                    else:
+                        current_match = re.match(STRING_MATCH, self.text)
+                        if current_match is not None:
+                            self.text = re.sub(STRING_MATCH, "", self.text)
+                            self._tokenType = JackTokenizer.STRING_CONST
+                            self._currentToken = current_match.group(1)
+                        else:
+                            current_match = re.match(IDENTIFIER_MATCH, self.text)
+                            if current_match is not None:
+                                self.text = re.sub(IDENTIFIER_MATCH, "", self.text)
+                                self._tokenType = JackTokenizer.IDENTIFIER
+                                self._currentToken = current_match.group(1)
 
-    def tokenType(self) -> TokenType:
-        """Returns the type of the current token."""
-        if self.current_token in self.KEYWORDS:
-            return TokenType.KEYWORD
-        elif self.current_token in self.SYMBOLS:
-            return TokenType.SYMBOL
-        elif self.current_token.isdigit():
-            return TokenType.INT_CONST
-        elif self.current_token.startswith('"') and self.current_token.endswith('"'):
-            return TokenType.STRING_CONST
-        else:
-            return TokenType.IDENTIFIER
+    def tokenType(self):
+        return self._tokenType
 
-    def keyWord(self) -> KeywordType:
-        """Returns the current token if it is a keyword."""
-        if self.tokenType() == TokenType.KEYWORD:
-            return KeywordType(self.current_token)
+    def keyWord(self):
+        return self._currentToken
 
-    def symbol(self) -> str:
-        """Returns the current token if it is a symbol."""
-        if self.tokenType() == TokenType.SYMBOL:
-            return self.current_token
+    def symbol(self):
+        return self._currentToken
 
-    def identifier(self) -> str:
-        """Returns the current token if it is an identifier."""
-        if self.tokenType() == TokenType.IDENTIFIER:
-            return self.current_token
+    def identifier(self):
+        return self._currentToken
 
-    def intVal(self) -> int:
-        """Returns the integer value of the current token."""
-        if self.tokenType() == TokenType.INT_CONST:
-            return int(self.current_token)
+    def intVal(self):
+        return int(self._currentToken)
 
-    def stringVal(self) -> str:
-        """Returns the string value of the current token."""
-        if self.tokenType() == TokenType.STRING_CONST:
-            return self.current_token.strip('"')
+    def stringVal(self):
+        return self._currentToken
 
-    def decrementPointer(self):
-        """Moves the token pointer back by one."""
-        if self.pointer > 0:
-            self.pointer -= 1
-            self.current_token = self.tokens[self.pointer]
 
-    def isOperation(self) -> bool:
-        """Checks if the current symbol is an operation."""
-        if self.tokenType() == TokenType.SYMBOL and self.current_token in self.OPERATIONS:
-            return True
-        return False
