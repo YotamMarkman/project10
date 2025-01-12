@@ -17,12 +17,10 @@ class CompilationEngine:
         """
         self._indentation = 0
         self._tokenizer = JackTokenizer(input_file_path)
-        print(f"Opening output file {output_path}")
         self._output = open(output_path, "w+")
 
     def compileClass(self):
         if self._tokenizer.hasMoreTokens():
-            print("Compiling class")
             self._tokenizer.advance()
             self._output.write("<class>\n")
             self._indentation += 1
@@ -99,13 +97,20 @@ class CompilationEngine:
         self._tokenizer.advance()
 
     def compileParameterList(self):
-        self._output.write("  " * self._indentation + "<parameterList>\n")
+        self._output.write("  " * self._indentation + "<parameterList>")
         self._indentation += 1
+        count = 0
         while self._tokenizer.tokenType() != self._tokenizer.SYMBOL:
+            count += 1
+            if count == 1:
+                self._output.write("\n")
+
             if self._tokenizer.tokenType() == self._tokenizer.KEYWORD:
                 self._write_keyword()
+
             elif self._tokenizer.tokenType() == self._tokenizer.IDENTIFIER:
                 self._write_identifier()
+
             self._tokenizer.advance()
             self._write_identifier()
             self._tokenizer.advance()
@@ -114,8 +119,10 @@ class CompilationEngine:
                 self._tokenizer.advance()
 
         self._indentation -= 1
-        self._output.write("  " * self._indentation + "</parameterList>\n")
-
+        if count != 0:
+            self._output.write("  " * self._indentation + "</parameterList>\n")
+        else:
+            self._output.write(" </parameterList>\n")
     def compileVarDec(self):
         self._output.write("  " * self._indentation + "<varDec>\n")
         self._indentation += 1
@@ -286,10 +293,11 @@ class CompilationEngine:
         """
         self._output.write("  " * self._indentation + "<expression>\n")
         self._indentation += 1
-
+        count = 0
         self.compileTerm()
         while self._tokenizer.tokenType() == self._tokenizer.SYMBOL and \
                 self._tokenizer.symbol() in OP_LIST:
+            count += 1
             self._write_symbol()
             self._tokenizer.advance()
             self.compileTerm()
@@ -405,9 +413,9 @@ class CompilationEngine:
     def _write_symbol(self):
         string_to_write = self._tokenizer.symbol()
         if self._tokenizer.symbol() == "<":
-            string_to_write = "&lt"
+            string_to_write = "<"
         elif self._tokenizer.symbol() == ">":
-            string_to_write = "&gt"
+            string_to_write = ">"
         elif self._tokenizer.symbol() == "&":
             string_to_write = "&amp"
         self._output.write("  " * self._indentation + "<symbol> " +
@@ -419,4 +427,4 @@ class CompilationEngine:
 
     def _write_str_const(self):
         self._output.write("  " * self._indentation + "<stringConstant> " +
-                           self._tokenizer.identifier() + " </stringConstant>\n")
+                           self._tokenizer.identifier() + "</stringConstant>\n")

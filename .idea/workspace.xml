@@ -4,10 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="88bc9430-cf51-4597-907e-c647942217a8" name="Changes" comment="all classes need to be checked for comparison">
+    <list default="true" id="88bc9430-cf51-4597-907e-c647942217a8" name="Changes" comment="fixed upload">
+      <change afterPath="$PROJECT_DIR$/ExpressionLessSquare/Main.jack" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExpressionLessSquare/Square.jack" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExpressionLessSquare/SquareGame.jack" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CompilationEngine.py" beforeDir="false" afterPath="$PROJECT_DIR$/CompilationEngine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/JackAnalyzer.py" beforeDir="false" afterPath="$PROJECT_DIR$/JackAnalyzer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +83,7 @@
       <workItem from="1736259265970" duration="4622000" />
       <workItem from="1736289196972" duration="8179000" />
       <workItem from="1736457602875" duration="7292000" />
-      <workItem from="1736678839499" duration="1262000" />
+      <workItem from="1736678839499" duration="3384000" />
     </task>
     <task id="LOCAL-00001" summary="First class and part of CompilationEngine.py">
       <option name="closed" value="true" />
@@ -123,7 +125,15 @@
       <option name="project" value="LOCAL" />
       <updated>1736524229262</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="fixed upload">
+      <option name="closed" value="true" />
+      <created>1736680147454</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1736680147454</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -144,6 +154,7 @@
     <MESSAGE value="First class and part of CompilationEngine.py" />
     <MESSAGE value="few classes in CompilationEngine.py" />
     <MESSAGE value="all classes need to be checked for comparison" />
-    <option name="LAST_COMMIT_MESSAGE" value="all classes need to be checked for comparison" />
+    <MESSAGE value="fixed upload" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed upload" />
   </component>
 </project>
