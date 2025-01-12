@@ -17,10 +17,12 @@ class CompilationEngine:
         """
         self._indentation = 0
         self._tokenizer = JackTokenizer(input_file_path)
+        print(f"Opening output file {output_path}")
         self._output = open(output_path, "w+")
 
     def compileClass(self):
         if self._tokenizer.hasMoreTokens():
+            print("Compiling class")
             self._tokenizer.advance()
             self._output.write("<class>\n")
             self._indentation += 1
